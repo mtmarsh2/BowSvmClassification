@@ -63,6 +63,20 @@ def load_sift_descriptors_from_file(filename):
 	with open(filename, "rb") as myfile:
 		return pickle.load(myfile)
 
+def classify_images(svm, list_of_image_names):
+	labels = []
+	for index, image_name in enumerate(list_of_image_names):
+		target_hist = create_histogram((kmeans.predict(get_sift_descriptors(image_name))))
+		labels.append(clf.predict(target_hist))
+	return labels
+
+def test_classification(predicted_labels, trained_labels):
+	total_correct = 0
+	for elem1, elem2 in zip(predicted_labels, trained_labels):
+		if elem1 == elem2:
+			total_correct += 1
+	accuracy = total_correct / len(predicted_labels)
+
 if __name__ == "__main__":
 	image_to_descriptors = build_dataset(list_of_image_names)
 	#make a list of all sift descriptors to be fed into kmeans
@@ -75,27 +89,12 @@ if __name__ == "__main__":
 			labels = kmeans.predict(image_to_descriptors[image_name])
 			all_image_histograms[image_name] = create_histogram(labels)
 
-correct_labels = create_labels_matrix(all_image_histograms.keys())
+	correct_labels = create_labels_matrix(all_image_histograms.keys())
 
-###SVM Training
-clf = svm.SVC()
-clf.fit(all_image_histograms.values(), correct_labels)
+	###SVM Training
+	clf = svm.SVC()
+	clf.fit(all_image_histograms.values(), correct_labels)
 
-#start the testing part 
-total_correct = 0
-
-for i in list_of_image_names:
-	target_hist = create_histogram((kmeans.predict(get_sift_descriptors(image_name))))
-	if clf.predict(target_hist)[0] in create_labels_matrix(i):
-		total_correct = total_correct + 1
-import pdb
-for j,image_name in enumerate(list_of_image_names):
-	target_hist = create_histogram((kmeans.predict(get_sift_descriptors(image_name))))
-	clf.predict(target_hist)[0] + image_name
-
-"""
-for image_name in list_of_image_names:
-	pass
-
-classify_image()
-"""
+	predicted_labels = classify_images(clf, list_of_image_names)
+	accuracy = test_classification(predicted_labels, trained_labels)
+	print accuracy
