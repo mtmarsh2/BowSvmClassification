@@ -1,8 +1,9 @@
+from __future__ import division
 import cv2
 import numpy as np
 import glob
 import os
-from sklearn.cluster import KMeans, MiniBatchKMeans, svm
+from sklearn.cluster import KMeans, MiniBatchKMeans
 import scipy.cluster.vq as vq
 import pdb
 import cPickle as pickle
@@ -39,7 +40,7 @@ def compute_codebook(list_of_sift_descriptors):
 	
 
 def create_histogram(labels):
-	hist, edges = np.histogram(labels, bins=range(num_clusters), normed=True))
+	hist, edges = np.histogram(labels, bins=range(num_clusters), normed=True)
 	return hist
 
 def create_labels_matrix(image_names):
@@ -75,13 +76,15 @@ def test_classification(predicted_labels, trained_labels):
 	for elem1, elem2 in zip(predicted_labels, trained_labels):
 		if elem1 == elem2:
 			total_correct += 1
-	accuracy = total_correct / len(predicted_labels)
+	return total_correct / len(predicted_labels)
 
 if __name__ == "__main__":
 	image_to_descriptors = build_dataset(list_of_image_names)
 	#make a list of all sift descriptors to be fed into kmeans
 	list_of_sift_descriptors = np.vstack(image_to_descriptors.values())
 
+	#setup kmeans
+	kmeans.fit(list_of_sift_descriptors)
 	#create bow histograms for images
 	for index,image_name in enumerate(list_of_image_names):
 		if index % 100 == 0:
@@ -96,5 +99,6 @@ if __name__ == "__main__":
 	clf.fit(all_image_histograms.values(), correct_labels)
 
 	predicted_labels = classify_images(clf, list_of_image_names)
+	trained_labels = create_labels_matrix(list_of_image_names)
 	accuracy = test_classification(predicted_labels, trained_labels)
 	print accuracy
